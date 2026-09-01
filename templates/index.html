@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Job Match Assistant</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f7fa;
+            color: #333333;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 750px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        h1 {
+            text-align: center;
+            color: #1a365d;
+            margin-bottom: 24px;
+            font-size: 28px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+        .pdf-upload-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .pdf-upload-bar input[type="file"] {
+            flex: 1;
+            padding: 6px 10px;
+            font-size: 13px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            background: #f7fafc;
+        }
+        .upload-btn {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 14px;
+            background-color: #4a5568;
+        }
+        .upload-btn:hover {
+            background-color: #2d3748;
+        }
+        .pdf-status {
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .pdf-status.success {
+            color: #276749;
+        }
+        .pdf-status.error {
+            color: #c53030;
+        }
+        textarea {
+            width: 100%;
+            height: 140px;
+            padding: 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        textarea:focus {
+            border-color: #3182ce;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            background-color: #3182ce;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #2b6cb0;
+        }
+        button:disabled {
+            background-color: #a0aec0;
+            cursor: not-allowed;
+        }
+        #results {
+            margin-top: 28px;
+        }
+        .status-message {
+            text-align: center;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #4a5568;
+            background-color: #edf2f7;
+            border-radius: 6px;
+        }
+        .error-card {
+            padding: 16px;
+            background-color: #fff5f5;
+            color: #c53030;
+            border: 1px solid #feb2b2;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .result-card {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 24px;
+        }
+        .score-box {
+            text-align: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #edf2f7;
+        }
+        .score-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #718096;
+            margin-bottom: 6px;
+        }
+        .score-value {
+            font-size: 42px;
+            font-weight: 800;
+            color: #2b6cb0;
+        }
+        .section-block {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            list-style: none;
+            padding: 0;
+        }
+        .skill-tag {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .skill-tag.matching {
+            background-color: #e6fffa;
+            color: #234e52;
+            border: 1px solid #b2f5ea;
+        }
+        .skill-tag.missing {
+            background-color: #fff5f5;
+            color: #742a2a;
+            border: 1px solid #fed7d7;
+        }
+        .bullet-list {
+            padding-left: 20px;
+            color: #4a5568;
+        }
+        .bullet-list li {
+            margin-bottom: 6px;
+        }
+        .text-content {
+            color: #4a5568;
+            background-color: #f7fafc;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #3182ce;
+        }
+        .action-buttons-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #edf2f7;
+        }
+        .secondary-btn {
+            flex: 1;
+            background-color: #2b6cb0;
+            font-size: 14px;
+            padding: 10px 16px;
+        }
+        .secondary-btn:hover {
+            background-color: #1a365d;
+        }
+        .extra-section {
+            margin-top: 20px;
+            padding: 16px;
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+        }
+        .extra-section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .improved-item {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .improved-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        .improved-sec-name {
+            font-weight: 700;
+            font-size: 14px;
+            color: #2b6cb0;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Job Match Assistant</h1>
+        
+        <form id="match-form">
+            <div class="form-group">
+                <label for="resume">Resume</label>
+                <div class="pdf-upload-bar">
+                    <input type="file" id="pdf-file" accept=".pdf">
+                    <button type="button" id="upload-pdf-btn" class="upload-btn">Upload PDF</button>
+                </div>
+                <div id="pdf-status" class="pdf-status"></div>
+                <textarea id="resume" name="resume" placeholder="Paste your resume text here or upload a PDF above..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="job-description">Job Description</label>
+                <textarea id="job-description" name="job_description" placeholder="Paste the job description here..."></textarea>
+            </div>
+
+            <button type="button" id="analyze-btn">Analyze Match</button>
+        </form>
+
+        <!-- Results section -->
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let currentAnalysisResult = null;
+
+        // PDF Upload Handler
+        document.getElementById('upload-pdf-btn').addEventListener('click', async function() {
+            const pdfFileInput = document.getElementById('pdf-file');
+            const pdfStatus = document.getElementById('pdf-status');
+            const uploadBtn = document.getElementById('upload-pdf-btn');
+            const resumeInput = document.getElementById('resume');
+
+            pdfStatus.className = 'pdf-status';
+            pdfStatus.innerText = '';
+
+            if (!pdfFileInput.files || pdfFileInput.files.length === 0) {
+                pdfStatus.className = 'pdf-status error';
+                pdfStatus.innerText = 'Please select a PDF file first.';
+                return;
+            }
+
+            const file = pdfFileInput.files[0];
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                pdfStatus.className = 'pdf-status error';
+                pdfStatus.innerText = 'Only PDF files are allowed.';
+                return;
+            }
+
+            uploadBtn.disabled = true;
+            uploadBtn.innerText = 'Uploading...';
+            pdfStatus.innerText = 'Extracting text from PDF...';
+
+            try {
+                const formData = new FormData();
+                formData.append('resume_pdf', file);
+
+                const response = await fetch('/api/extract-resume', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    const errorMsg = data.message || 'Could not extract text from PDF.';
+                    pdfStatus.className = 'pdf-status error';
+                    pdfStatus.innerText = errorMsg;
+                    return;
+                }
+
+                resumeInput.value = data.resume_text;
+                pdfStatus.className = 'pdf-status success';
+                pdfStatus.innerText = 'Resume text successfully extracted from PDF!';
+
+            } catch (err) {
+                pdfStatus.className = 'pdf-status error';
+                pdfStatus.innerText = 'Failed to extract PDF text. Please try again.';
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.innerText = 'Upload PDF';
+            }
+        });
+
+        // Analyze Match Handler
+        document.getElementById('analyze-btn').addEventListener('click', async function() {
+            const resumeInput = document.getElementById('resume');
+            const jobDescInput = document.getElementById('job-description');
+            const resultsDiv = document.getElementById('results');
+            const analyzeBtn = document.getElementById('analyze-btn');
+
+            const resume = resumeInput.value.trim();
+            const jobDescription = jobDescInput.value.trim();
+
+            if (!resume || !jobDescription) {
+                resultsDiv.innerHTML = `
+                    <div class="error-card">
+                        Please provide both Resume and Job Description.
+                    </div>
+                `;
+                return;
+            }
+
+            // Show "Analyzing..." state
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerText = 'Analyzing...';
+            resultsDiv.innerHTML = `
+                <div class="status-message">
+                    Analyzing match with AI... Please wait.
+                </div>
+            `;
+            currentAnalysisResult = null;
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        resume: resume,
+                        job_description: jobDescription
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    const errorMsg = data.message || 'An error occurred while analyzing the match.';
+                    resultsDiv.innerHTML = `
+                        <div class="error-card">
+                            ${escapeHtml(errorMsg)}
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Store complete analysis result
+                currentAnalysisResult = data;
+
+                // Render result fields
+                const matchingSkillsHtml = data.matching_skills && data.matching_skills.length > 0
+                    ? `<ul class="skills-list">${data.matching_skills.map(s => `<li class="skill-tag matching">${escapeHtml(s)}</li>`).join('')}</ul>`
+                    : '<p style="color: #718096; font-style: italic;">None identified.</p>';
+
+                const missingSkillsHtml = data.missing_skills && data.missing_skills.length > 0
+                    ? `<ul class="skills-list">${data.missing_skills.map(s => `<li class="skill-tag missing">${escapeHtml(s)}</li>`).join('')}</ul>`
+                    : '<p style="color: #718096; font-style: italic;">None identified.</p>';
+
+                const gapsHtml = data.gaps && data.gaps.length > 0
+                    ? `<ul class="bullet-list">${data.gaps.map(g => `<li>${escapeHtml(g)}</li>`).join('')}</ul>`
+                    : '<p style="color: #718096; font-style: italic;">No specific gaps identified.</p>';
+
+                const recommendationsHtml = data.recommendations && data.recommendations.length > 0
+                    ? `<ul class="bullet-list">${data.recommendations.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>`
+                    : '<p style="color: #718096; font-style: italic;">No specific recommendations.</p>';
+
+                resultsDiv.innerHTML = `
+                    <div class="result-card">
+                        <div class="score-box">
+                            <div class="score-title">Match Score</div>
+                            <div class="score-value">${escapeHtml(String(data.match_score))}%</div>
+                        </div>
+
+                        <div class="section-block">
+                            <div class="section-title">Matching Skills</div>
+                            ${matchingSkillsHtml}
+                        </div>
+
+                        <div class="section-block">
+                            <div class="section-title">Missing Skills</div>
+                            ${missingSkillsHtml}
+                        </div>
+
+                        <div class="section-block">
+                            <div class="section-title">Experience Match</div>
+                            <div class="text-content">${escapeHtml(data.experience_match || 'N/A')}</div>
+                        </div>
+
+                        <div class="section-block">
+                            <div class="section-title">Gaps</div>
+                            ${gapsHtml}
+                        </div>
+
+                        <div class="section-block">
+                            <div class="section-title">Recommendations</div>
+                            ${recommendationsHtml}
+                        </div>
+
+                        <div class="action-buttons-group">
+                            <button type="button" id="improve-btn" class="secondary-btn">Improve My Resume</button>
+                            <button type="button" id="explain-btn" class="secondary-btn">Explain My Match</button>
+                        </div>
+
+                        <div id="extra-results-area"></div>
+                    </div>
+                `;
+
+                // Attach event listeners for new actions
+                document.getElementById('improve-btn').addEventListener('click', handleImproveResume);
+                document.getElementById('explain-btn').addEventListener('click', handleExplainMatch);
+
+            } catch (err) {
+                resultsDiv.innerHTML = `
+                    <div class="error-card">
+                        Failed to connect to the server. Please try again.
+                    </div>
+                `;
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerText = 'Analyze Match';
+            }
+        });
+
+        // Improve My Resume Handler
+        async function handleImproveResume() {
+            const improveBtn = document.getElementById('improve-btn');
+            const extraArea = document.getElementById('extra-results-area');
+            const resumeInput = document.getElementById('resume');
+
+            if (!currentAnalysisResult) return;
+
+            improveBtn.disabled = true;
+            improveBtn.innerText = 'Improving...';
+
+            extraArea.innerHTML = `
+                <div class="status-message" style="margin-top: 20px;">
+                    Generating resume improvement suggestions...
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/api/improve-resume', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        resume: resumeInput.value.trim(),
+                        gaps: currentAnalysisResult.gaps || [],
+                        recommendations: currentAnalysisResult.recommendations || []
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    const errorMsg = data.message || 'Resume improvement failed.';
+                    extraArea.innerHTML = `
+                        <div class="error-card" style="margin-top: 20px;">
+                            ${escapeHtml(errorMsg)}
+                        </div>
+                    `;
+                    return;
+                }
+
+                const sectionsHtml = data.improved_sections && data.improved_sections.length > 0
+                    ? data.improved_sections.map(sec => `
+                        <div class="improved-item">
+                            <div class="improved-sec-name">${escapeHtml(sec.section)}</div>
+                            <div style="color: #4a5568;">${escapeHtml(sec.suggestion)}</div>
+                        </div>
+                    `).join('')
+                    : '<p style="color: #718096; font-style: italic;">No specific improvement suggestions returned.</p>';
+
+                extraArea.innerHTML = `
+                    <div class="extra-section">
+                        <div class="extra-section-title">Improved Sections & Suggestions</div>
+                        ${sectionsHtml}
+                    </div>
+                `;
+
+            } catch (err) {
+                extraArea.innerHTML = `
+                    <div class="error-card" style="margin-top: 20px;">
+                        Failed to generate resume improvements. Please try again.
+                    </div>
+                `;
+            } finally {
+                improveBtn.disabled = false;
+                improveBtn.innerText = 'Improve My Resume';
+            }
+        }
+
+        // Explain My Match Handler
+        async function handleExplainMatch() {
+            const explainBtn = document.getElementById('explain-btn');
+            const extraArea = document.getElementById('extra-results-area');
+            const resumeInput = document.getElementById('resume');
+            const jobDescInput = document.getElementById('job-description');
+
+            if (!currentAnalysisResult) return;
+
+            explainBtn.disabled = true;
+            explainBtn.innerText = 'Explaining...';
+
+            extraArea.innerHTML = `
+                <div class="status-message" style="margin-top: 20px;">
+                    Generating match explanation...
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/api/explain-match', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        resume: resumeInput.value.trim(),
+                        job_description: jobDescInput.value.trim(),
+                        analysis: currentAnalysisResult
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    const errorMsg = data.message || 'Match explanation failed.';
+                    extraArea.innerHTML = `
+                        <div class="error-card" style="margin-top: 20px;">
+                            ${escapeHtml(errorMsg)}
+                        </div>
+                    `;
+                    return;
+                }
+
+                extraArea.innerHTML = `
+                    <div class="extra-section">
+                        <div class="extra-section-title">Match Explanation</div>
+                        <div class="text-content">${escapeHtml(data.explanation || '')}</div>
+                    </div>
+                `;
+
+            } catch (err) {
+                extraArea.innerHTML = `
+                    <div class="error-card" style="margin-top: 20px;">
+                        Failed to generate match explanation. Please try again.
+                    </div>
+                `;
+            } finally {
+                explainBtn.disabled = false;
+                explainBtn.innerText = 'Explain My Match';
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
